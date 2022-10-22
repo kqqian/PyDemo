@@ -138,7 +138,7 @@ class PositionalEmbedding(nn.Module):
         初始化函数，主要是初始化一个固定的cos/sin数组，总大小为[seq_len, 1, d_model]，其中d_model=512是词向量大小
         PE(pos, 2i) = sin(pos / 10000*(2i/d_model)))
         PE(pos, 2i+1) = cos(pos / 10000*(2i/d_model)))
-        :param max_seq_len:
+        :param max_seq_len: 最长的序列
         """
         # init
         super(PositionalEmbedding, self).__init__()
@@ -350,7 +350,7 @@ class ABDTransformer(nn.Module):
         decoder_attn = copy.deepcopy(attn)
         decoder_feed_forward = copy.deepcopy(feed_forward)
         decoder_layer = DecoderLayer(decoder_attn, d_model, dropout, decoder_feed_forward, 3)
-        self.decoder = L2RDecoder(decoder_layer, n_layers)
+        self.l2r_decoder = L2RDecoder(decoder_layer, n_layers)
 
         # 3 Positional Embedding
         self.positional_embedding = PositionalEmbedding(vocab.n_vocabs, d_model, dropout)
@@ -358,9 +358,19 @@ class ABDTransformer(nn.Module):
         # 4 Generator
         self.generator = Generator(d_model, vocab.n_vacabs)
 
-    def forward(self,x, src_mask, trg_mask, memory, r2l_memory, r2l_trg_mask):
-        print(1)
-
+    def forward(self, src, r2l_trg, trg, mask):
+        src_mask, trg_mask, r2l_trg_mask, r2l_pad_mask = mask
+        # embedding + pe
+        src = self.positional_embedding(src)
+        # encoder
+        # src: embedding with position, src_mask: mask (same with decoder)
+        encoding_output = self.encoder(src, src_mask)
+        # decoder
+        # trg: decoder input, encoding_output: encoder memory, src_mask, trg_mask: mask
+        l2r_output = self.l2r_decoder(trg, encoding_output, src_mask, trg_mask, None, None)
+        # linear + softmax -> output prob
+        l2r_pred = self.generator(l2r_output)
+        return l2r_pred
 
 
 
