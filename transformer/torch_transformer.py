@@ -360,15 +360,15 @@ class ABDTransformer(nn.Module):
 
     def forward(self, src, r2l_trg, trg, mask):
         src_mask, trg_mask, r2l_trg_mask, r2l_pad_mask = mask
-        # embedding + pe
+        # embedding + pe 位置编码
         src = self.positional_embedding(src)
-        # encoder
+        # encoder 编码层
         # src: embedding with position, src_mask: mask (same with decoder)
         encoding_output = self.encoder(src, src_mask)
-        # decoder
+        # decoder 解码层
         # trg: decoder input, encoding_output: encoder memory, src_mask, trg_mask: mask
         l2r_output = self.l2r_decoder(trg, encoding_output, src_mask, trg_mask, None, None)
-        # linear + softmax -> output prob
+        # linear + softmax -> output prob 输出层
         l2r_pred = self.generator(l2r_output)
         return l2r_pred
 
@@ -379,8 +379,14 @@ class ABDTransformer(nn.Module):
 
 
 if __name__ == "__main__":
-    rs = clones(SublayerConnection([1,1]), 10)
-    print(rs)
+    d_model = 512
+    d_ff = 512
+    vocab = {'n_vocabs': 100}
+    n_heads = 4
+    n_layers = 6
+    dropout = 0.1
+    transformer = ABDTransformer(vocab, d_model, d_ff, n_heads, n_layers, dropout)
+
     
 
 
