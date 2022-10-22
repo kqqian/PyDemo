@@ -322,6 +322,51 @@ class L2RDecoder(nn.Module):
         return x
 
 
+class ABDTransformer(nn.Module):
+    """
+    Transformer 模型
+    """
+    def __init__(self, vocab, d_model, d_ff, n_heads, n_layers, dropout):
+        """
+        Transformer构造方法：init
+        :param vocab: 词表对象，涉及词表大小等，这里介绍词
+        :param d_model: 词向量维度，这里涉及的是词向量
+        :param d_ff: MLP中间Linear层输出维度
+        :param n_heads: 自注意力头数
+        :param n_layers: 编码器层数
+        :param dropout: dropout
+        """
+        super(ABDTransformer, self).__init__()
+        self.vocab = vocab
+        self.d_model = d_model
+
+        # 1 Encoder
+        attn = MultiHeadAttention(n_heads, d_model, dropout)
+        feed_forward = PositionWiseFeedForward(d_model, d_ff, dropout, dropout)
+        encoder_layer = EncoderLayer(attn, feed_forward, d_model, dropout)
+        self.encoder = Encoder(encoder_layer, n_layers)
+
+        # 2 Decoder
+        decoder_attn = copy.deepcopy(attn)
+        decoder_feed_forward = copy.deepcopy(feed_forward)
+        decoder_layer = DecoderLayer(decoder_attn, d_model, dropout, decoder_feed_forward, 3)
+        self.decoder = L2RDecoder(decoder_layer, n_layers)
+
+        # 3 Positional Embedding
+        self.positional_embedding = PositionalEmbedding(vocab.n_vocabs, d_model, dropout)
+
+        # 4 Generator
+        self.generator = Generator(d_model, vocab.n_vacabs)
+
+    def forward(self,x, src_mask, trg_mask, memory, r2l_memory, r2l_trg_mask):
+        print(1)
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     rs = clones(SublayerConnection([1,1]), 10)
