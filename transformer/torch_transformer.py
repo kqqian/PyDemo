@@ -223,6 +223,7 @@ def subsequence_mask(size):
 def clones(obj ,n):
     return nn.ModuleList([copy.deepcopy(obj) for _ in range(n)])
 
+
 class EncoderLayer(nn.Module):
     """
     编码器层
@@ -241,6 +242,7 @@ class EncoderLayer(nn.Module):
         l2 = self.sublayers[1](x, self.feed_forward)
         return l2
 
+
 class Encoder(nn.Module):
     """
     编码器，transformer默认有6x Encoder Layer
@@ -254,6 +256,7 @@ class Encoder(nn.Module):
         for enc in self.encs:
             x = enc(x, src_mask)
         return x
+
 
 class DecoderLayer(nn.Module):
     """
@@ -292,16 +295,32 @@ class DecoderLayer(nn.Module):
 
 
 class R2LDecoder(nn.Module):
-    def __init__(self):
+    """
+    反向解码器
+    """
+    def __init__(self, decoder_layer, n):
         super(R2LDecoder, self).__init__()
+        self.decoder_layer = clones(decoder_layer, n)
 
-    def forward(self):
-        print(1)
+    def forward(self, x, memory, src_mask, r2l_trg_mask):
+        for layer in self.decoder_layer:
+            x = layer(x, memory, src_mask, r2l_trg_mask)
+        return x
+
 
 class L2RDecoder(nn.Module):
-    def __init__(self):
+    """
+    正向解码器
+    """
+    def __init__(self, decoder_layer, n):
         super(L2RDecoder, self).__init__()
-        
+        self.decoder_layer = clones(decoder_layer, n)
+
+    def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
+        for layer in self.decoder_layer:
+            x = layer(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
+        return x
+
 
 
 if __name__ == "__main__":
