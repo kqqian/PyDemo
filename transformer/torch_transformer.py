@@ -375,16 +375,20 @@ class ABDTransformer(nn.Module):
 
 
 
-
+class vocabulary:
+    def __init__(self):
+        super(vocabulary, self).__init__()
+        self.n_vocabs = 100
 
 
 if __name__ == "__main__":
     d_model = 512
     d_ff = 512
-    vocab = {'n_vocabs': 100}
+    vocab = vocabulary()
     n_heads = 4
     n_layers = 6
     dropout = 0.1
+    print(vocab.n_vocabs)
     transformer = ABDTransformer(vocab, d_model, d_ff, n_heads, n_layers, dropout)
 
     
